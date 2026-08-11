@@ -1,6 +1,24 @@
+const send = require("send");
+
 function meuEmail(){
-    document.getElementById("login")
-    document.getElementById("senha")
-    alert("Está funcionando")
-    alert("Está funcionando também")
+
+    let email = document.getElementById("login").value;
+    let password = document.getElementById("senha").value;
+
+    fetch("http://localhost:3000/login", {
+        method: "POST", 
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+            email: email,
+            password: password
+        })
+    })
+    .then(resposta => resposta.json())
+    .then(dados => {
+        console.log(dados)
+    })
 }

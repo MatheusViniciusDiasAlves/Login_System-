@@ -11,7 +11,16 @@
             <h1>Tela de Login</h1>
             <input type="email" placeholder="seuemail@email.com" id="login">
             <input type="password" placeholder="********" id="senha">
-            <button type="submit" onclick="meuEmail()">Enviar</button> 
+            <button type="button" onclick="meuEmail()">Entrar</button> 
+        </div>
+
+        <h1>Não tem conta?</h1>
+        <button onclick="chamarCadastro()">Clique Aqui</button>
+        <div id="cadastramentoDiv" style="display: none;">
+            <input type="text" placeholder="Digite seu nome completo" id="nomeCadastrado">
+            <input type="email" placeholder="Digite seu email" id="emailCadastro">
+            <input type="password" placeholder="Digite sua senha" id="senhaCadastrada">
+            <button type="button" onclick="cadastrarDados()">Enviar</button>
         </div>
     </main>
 

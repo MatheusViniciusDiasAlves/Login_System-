@@ -1,7 +1,16 @@
+
 const conexao = require("./database");
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const cors = require("cors");
+
+const app = express();
+
+const PORT = 3000;
+
+app.use(cors());
+app.use(express.json());
 
 function autenticarToken(req, res, next) {
 
@@ -45,12 +54,6 @@ function autenticarToken(req, res, next) {
     }
 }
 
-
-const app = express();
-
-const PORT = 3000;
-
-app.use(express.json());
 
 
 app.post("/login", (req, res) => {

@@ -1,12 +1,57 @@
 const conexao = require("./database");
 const express = require("express");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+
+function autenticarToken(req, res, next) {
+
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        return res.status(401).json({
+            sucesso: false,
+            mensagem: "Token não fornecido."
+        });
+    }
+
+    const partes = authHeader.split(" ");
+
+    if (partes.length !== 2 || partes[0] !== "Bearer") {
+        return res.status(401).json({
+            sucesso: false,
+            mensagem: "Formato do token inválido."
+        });
+    }
+
+    const token = partes[1];
+
+    try {
+
+        const usuario = jwt.verify(
+            token,
+            process.env.JWT_SECRET
+        );
+
+        req.usuario = usuario;
+
+        next();
+
+    } catch (erro) {
+
+        return res.status(401).json({
+            sucesso: false,
+            mensagem: "Token inválido ou expirado."
+        });
+    }
+}
+
 
 const app = express();
 
 const PORT = 3000;
 
 app.use(express.json());
+
 
 app.post("/login", (req, res) => {
 
@@ -20,6 +65,7 @@ app.post("/login", (req, res) => {
     conexao.query(sql, [email], async (erro, resultados) => {
 
         if (erro) {
+
             console.log("Erro ao consultar usuário:", erro);
 
             return res.status(500).json({
@@ -28,7 +74,6 @@ app.post("/login", (req, res) => {
             });
         }
 
-        // Usuário não encontrado
         if (resultados.length === 0) {
 
             return res.status(401).json({
@@ -39,7 +84,6 @@ app.post("/login", (req, res) => {
 
         const usuario = resultados[0];
 
-        // Compara a senha digitada com o hash do banco
         const senhaCorreta = await bcrypt.compare(
             password,
             usuario.senha
@@ -53,13 +97,25 @@ app.post("/login", (req, res) => {
             });
         }
 
-        // Login correto
+        const token = jwt.sign(
+            {
+                id: usuario.id,
+                email: usuario.email
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: "1h"
+            }
+        );
+
         res.json({
             sucesso: true,
-            mensagem: "Login realizado com sucesso!"
+            mensagem: "Login realizado com sucesso!",
+            token: token
         });
     });
 });
+
 
 app.post("/cadastro", async (req, res) => {
 
@@ -80,14 +136,13 @@ app.post("/cadastro", async (req, res) => {
             (erro, resultado) => {
 
                 if (erro) {
+
                     console.log("Erro ao cadastrar:", erro);
 
-                    res.status(500).json({
+                    return res.status(500).json({
                         sucesso: false,
                         mensagem: "Erro ao cadastrar usuário."
                     });
-
-                    return;
                 }
 
                 console.log("Usuário cadastrado com sucesso!");
@@ -110,6 +165,19 @@ app.post("/cadastro", async (req, res) => {
     }
 });
 
-app.listen(PORT, () =>{
-    console.log(`Servidor funcinando na porta ${PORT}`)
-})
+
+app.get("/perfil", autenticarToken, (req, res) => {
+
+    console.log("Usuário autenticado:", req.usuario);
+
+    res.json({
+        sucesso: true,
+        mensagem: "Você acessou seu perfil!",
+        usuario: req.usuario
+    });
+});
+
+
+app.listen(PORT, () => {
+    console.log(`Servidor funcionando na porta ${PORT}`);
+});
